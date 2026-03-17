@@ -2,28 +2,22 @@
 <!--
 ═══════════════════════════════════════════════════════════════
   Control de Horas Laborales (CHL)
-  © 2025 Augusto Caldara. Todos los derechos reservados.
+  © 2025 Augusto Caldaro. Todos los derechos reservados.
   
-  Este software es propiedad exclusiva de Augusto Caldara.
+  Este software es propiedad exclusiva de Augusto Caldaro.
   Queda estrictamente prohibido:
   - Copiar, modificar o distribuir este código
   - Uso comercial sin autorización expresa
   - Eliminación de esta nota de copyright
   
   Violaciones serán perseguidas legalmente.
-  Contacto: github.com/AugustoCaldara
+  Contacto: github.com/AugustoCaldaro
 ═══════════════════════════════════════════════════════════════
 -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0a0e27">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="CHL">
-    <meta name="description" content="Control de Horas Laborales - Registrá tu entrada, salida y calculá tus horas">
-    <link rel="manifest" href="manifest.json">
+    <meta name="viewport"="width=device-width, initial-scale=1.0">
     <title>Control de Horas Laborales</title>
     <style>
         * {
@@ -890,6 +884,31 @@
             font-weight: 700;
             color: var(--accent-yellow);
         }
+
+        .usuario-card {
+            background: linear-gradient(135deg, rgba(77, 159, 255, 0.12), rgba(255, 217, 61, 0.08));
+            border: 2px solid rgba(77, 159, 255, 0.25);
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .usuario-nombre {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .usuario-puesto {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
     </style>
 </head>
 <body>
@@ -903,6 +922,9 @@
             <p class="subtitle">Registra tus horas laborales</p>
             <div id="userTypeBadge"></div>
         </div>
+
+        <!-- Info del usuario -->
+        <div id="infoUsuario" style="display:none;"></div>
 
         <div class="status-card" id="statusCard">
             <div class="status-text">Estado actual</div>
@@ -954,7 +976,7 @@
 
         <!-- Marca de agua de autoría -->
         <div style="text-align:center;padding:20px 10px;margin-top:30px;border-top:1px solid rgba(77,159,255,0.1);">
-            <p style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Desarrollado por Augusto Caldara</p>
+            <p style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Desarrollado por Augusto Caldaro</p>
             <p style="font-size:10px;color:var(--text-secondary);opacity:0.6;">© 2025 - Todos los derechos reservados</p>
         </div>
     </div>
@@ -963,6 +985,21 @@
     <div id="modalConfigInicial" class="modal">
         <div class="modal-content">
             <div class="modal-header">Configuración Inicial</div>
+
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="nombreUsuario" placeholder="Ej: Juan">
+            </div>
+
+            <div class="form-group">
+                <label>Apellido</label>
+                <input type="text" id="apellidoUsuario" placeholder="Ej: Pérez">
+            </div>
+
+            <div class="form-group">
+                <label>Puesto / Área de trabajo</label>
+                <input type="text" id="puestoUsuario" placeholder="Ej: Operario de empaque">
+            </div>
 
             <div class="form-group">
                 <label>¿Eres embalador?</label>
@@ -1209,29 +1246,27 @@
     </div>
 
     <script>
-        /* 
-         * ADVERTENCIA: Este código está protegido por derechos de autor.
-         * © 2025 Augusto Caldara
-         * La modificación o copia no autorizada está prohibida.
-         */
-        
         // Sistema de almacenamiento local
-        let _mkKBxSwa = JSON.parse(localStorage.getItem('_mkKBxSwa')) || [];
-        let _IVufGELX = JSON.parse(localStorage.getItem('_IVufGELX')) || [];
-        let _EowPxnAH = localStorage.getItem('_EowPxnAH') || null;
-        let _CXBaOjUV = localStorage.getItem('_CXBaOjUV') || null;
-        let _WXJKQjyj = null;
-        let _HXeKDYAH = null;
+        let registros = JSON.parse(localStorage.getItem('registros')) || [];
+        let diasNoTrabajados = JSON.parse(localStorage.getItem('diasNoTrabajados')) || [];
+        let tipoUsuario = localStorage.getItem('tipoUsuario') || null;
+        let nombreUsuario = localStorage.getItem('nombreUsuario') || '';
+        let apellidoUsuario = localStorage.getItem('apellidoUsuario') || '';
+        let puestoUsuario = localStorage.getItem('puestoUsuario') || '';
+        let entradaActual = localStorage.getItem('entradaActual') || null;
+        let registroSalidaTemp = null;
+        let motivoSeleccionado = null;
 
-        const _mqPrBnCE = ['Franco / Día libre', 'Enfermedad', 'Vacaciones', 'Feriado', 'Suspensión', 'Otro'];
-        let _bYLzTMVc = JSON.parse(localStorage.getItem('_bYLzTMVc')) || [..._mqPrBnCE];
+        const MOTIVOS_DEFAULT = ['Franco / Día libre', 'Enfermedad', 'Vacaciones', 'Feriado', 'Suspensión', 'Otro'];
+        let motivosPersonalizados = JSON.parse(localStorage.getItem('motivosPersonalizados')) || [...MOTIVOS_DEFAULT];
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', () => {
-            if (!_EowPxnAH) {
+            if (!tipoUsuario) {
                 document.getElementById('modalConfigInicial').classList.add('active');
             } else {
                 mostrarConfiguracionActual();
+                mostrarInfoUsuario();
                 actualizarEstado();
                 verificarDiasPendientes();
                 mostrarRegistroHoy();
@@ -1240,6 +1275,28 @@
                 actualizarBadgeUsuario();
             }
         });
+
+        function mostrarInfoUsuario() {
+            const container = document.getElementById('infoUsuario');
+            if (!nombreUsuario || !apellidoUsuario) {
+                container.style.display = 'none';
+                return;
+            }
+
+            const nombreCompleto = `${nombreUsuario} ${apellidoUsuario}`;
+            let html = `
+                <div class="usuario-card">
+                    <div class="usuario-nombre">👤 ${nombreCompleto}</div>
+            `;
+
+            if (puestoUsuario) {
+                html += `<div class="usuario-puesto"><span>📋</span><span>${puestoUsuario}</span></div>`;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
 
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
@@ -1260,17 +1317,38 @@
         }
 
         function guardarConfigInicial() {
+            const nombre = document.getElementById('nombreUsuario').value.trim();
+            const apellido = document.getElementById('apellidoUsuario').value.trim();
+            const puesto = document.getElementById('puestoUsuario').value.trim();
             const tipo = document.getElementById('tipoTrabajador').value;
             
-            if (!tipo) {
-                alert('⚠️ Por favor selecciona tu tipo de trabajo');
+            if (!nombre) {
+                alert('⚠️ Por favor ingresá tu nombre');
                 return;
             }
 
-            _EowPxnAH = tipo;
-            localStorage.setItem('_EowPxnAH', _EowPxnAH);
+            if (!apellido) {
+                alert('⚠️ Por favor ingresá tu apellido');
+                return;
+            }
+
+            if (!tipo) {
+                alert('⚠️ Por favor seleccioná tu tipo de trabajo');
+                return;
+            }
+
+            nombreUsuario = nombre;
+            apellidoUsuario = apellido;
+            puestoUsuario = puesto;
+            tipoUsuario = tipo;
+
+            localStorage.setItem('nombreUsuario', nombreUsuario);
+            localStorage.setItem('apellidoUsuario', apellidoUsuario);
+            localStorage.setItem('puestoUsuario', puestoUsuario);
+            localStorage.setItem('tipoUsuario', tipoUsuario);
 
             document.getElementById('modalConfigInicial').classList.remove('active');
+            mostrarInfoUsuario();
             actualizarBadgeUsuario();
             mostrarConfiguracionActual();
             alert('✅ Configuración guardada correctamente');
@@ -1278,29 +1356,29 @@
 
         function actualizarBadgeUsuario() {
             const badge = document.getElementById('userTypeBadge');
-            if (_EowPxnAH === 'embalador') {
+            if (tipoUsuario === 'embalador') {
                 badge.innerHTML = '<span class="user-type-badge">📦 Embalador</span>';
-            } else if (_EowPxnAH === 'hora') {
+            } else if (tipoUsuario === 'hora') {
                 badge.innerHTML = '<span class="user-type-badge">⏰ Por Hora</span>';
             }
         }
 
         function marcarEntrada() {
             const ahora = new Date();
-            _CXBaOjUV = ahora.toISOString();
-            localStorage.setItem('_CXBaOjUV', _CXBaOjUV);
+            entradaActual = ahora.toISOString();
+            localStorage.setItem('entradaActual', entradaActual);
             actualizarEstado();
             alert('✅ Entrada registrada: ' + ahora.toLocaleTimeString());
         }
 
         function abrirModalSalida() {
-            if (!_CXBaOjUV) {
+            if (!entradaActual) {
                 alert('⚠️ Primero debes marcar la entrada');
                 return;
             }
 
             // Ocultar campos de hora si es embalador
-            if (_EowPxnAH === 'embalador') {
+            if (tipoUsuario === 'embalador') {
                 document.getElementById('salidaHoraContent').style.display = 'none';
             } else {
                 document.getElementById('salidaHoraContent').style.display = 'block';
@@ -1314,10 +1392,10 @@
         }
 
         function marcarSalida() {
-            if (!_CXBaOjUV) return;
+            if (!entradaActual) return;
 
             const ahora = new Date();
-            const entrada = new Date(_CXBaOjUV);
+            const entrada = new Date(entradaActual);
             
             const registro = {
                 id: Date.now(),
@@ -1327,7 +1405,7 @@
                 horasTrabajadas: calcularHoras(entrada, ahora, 0)
             };
 
-            if (_EowPxnAH === 'hora') {
+            if (tipoUsuario === 'hora') {
                 const descanso = parseInt(document.getElementById('descansoMinutos').value) || 0;
                 const esDomingo = document.getElementById('esDomingo').checked;
                 const esFeriado = document.getElementById('esFeriado').checked;
@@ -1338,10 +1416,10 @@
                 registro.horasTrabajadas = calcularHoras(entrada, ahora, descanso);
 
                 // Guardar y terminar
-                _mkKBxSwa.push(registro);
-                localStorage.setItem('_mkKBxSwa', JSON.stringify(_mkKBxSwa));
-                localStorage.removeItem('_CXBaOjUV');
-                _CXBaOjUV = null;
+                registros.push(registro);
+                localStorage.setItem('registros', JSON.stringify(registros));
+                localStorage.removeItem('entradaActual');
+                entradaActual = null;
 
                 cerrarModalSalida();
                 actualizarEstado();
@@ -1352,7 +1430,7 @@
                 alert('✅ Salida registrada exitosamente');
             } else {
                 // Es embalador - preguntar por cajas
-                _WXJKQjyj = registro;
+                registroSalidaTemp = registro;
                 cerrarModalSalida();
                 document.getElementById('modalCajas').classList.add('active');
             }
@@ -1366,14 +1444,14 @@
             const sinPapel = parseInt(document.getElementById('cajasSinPapel').value) || 0;
             const conPapel = parseInt(document.getElementById('cajasConPapel').value) || 0;
 
-            _WXJKQjyj.cajasSinPapel = sinPapel;
-            _WXJKQjyj.cajasConPapel = conPapel;
-            _WXJKQjyj.cajasPendientes = false;
+            registroSalidaTemp.cajasSinPapel = sinPapel;
+            registroSalidaTemp.cajasConPapel = conPapel;
+            registroSalidaTemp.cajasPendientes = false;
 
-            _mkKBxSwa.push(_WXJKQjyj);
-            localStorage.setItem('_mkKBxSwa', JSON.stringify(_mkKBxSwa));
-            localStorage.removeItem('_CXBaOjUV');
-            _CXBaOjUV = null;
+            registros.push(registroSalidaTemp);
+            localStorage.setItem('registros', JSON.stringify(registros));
+            localStorage.removeItem('entradaActual');
+            entradaActual = null;
 
             cerrarModalCajas();
             actualizarEstado();
@@ -1385,14 +1463,14 @@
         }
 
         function guardarSinCajas() {
-            _WXJKQjyj.cajasSinPapel = 0;
-            _WXJKQjyj.cajasConPapel = 0;
-            _WXJKQjyj.cajasPendientes = true;
+            registroSalidaTemp.cajasSinPapel = 0;
+            registroSalidaTemp.cajasConPapel = 0;
+            registroSalidaTemp.cajasPendientes = true;
 
-            _mkKBxSwa.push(_WXJKQjyj);
-            localStorage.setItem('_mkKBxSwa', JSON.stringify(_mkKBxSwa));
-            localStorage.removeItem('_CXBaOjUV');
-            _CXBaOjUV = null;
+            registros.push(registroSalidaTemp);
+            localStorage.setItem('registros', JSON.stringify(registros));
+            localStorage.removeItem('entradaActual');
+            entradaActual = null;
 
             cerrarModalCajas();
             actualizarEstado();
@@ -1404,7 +1482,7 @@
         }
 
         function abrirModalAgregarCajas(registroId) {
-            const registro = _mkKBxSwa.find(r => r.id === registroId);
+            const registro = registros.find(r => r.id === registroId);
             if (!registro) return;
 
             document.getElementById('cajasRegistroId').value = registroId;
@@ -1420,7 +1498,7 @@
 
         function guardarCajasPosterior() {
             const registroId = parseInt(document.getElementById('cajasRegistroId').value);
-            const registro = _mkKBxSwa.find(r => r.id === registroId);
+            const registro = registros.find(r => r.id === registroId);
             
             if (!registro) return;
 
@@ -1428,7 +1506,7 @@
             registro.cajasConPapel = parseInt(document.getElementById('agregarCajasConPapel').value) || 0;
             registro.cajasPendientes = false;
 
-            localStorage.setItem('_mkKBxSwa', JSON.stringify(_mkKBxSwa));
+            localStorage.setItem('registros', JSON.stringify(registros));
 
             cerrarModalAgregarCajas();
             mostrarRegistroHoy();
@@ -1445,8 +1523,8 @@
 
         function actualizarEstado() {
             const statusTime = document.getElementById('statusTime');
-            if (_CXBaOjUV) {
-                const entrada = new Date(_CXBaOjUV);
+            if (entradaActual) {
+                const entrada = new Date(entradaActual);
                 statusTime.textContent = `Entrada: ${entrada.toLocaleTimeString()}`;
             } else {
                 statusTime.textContent = 'Sin registro activo';
@@ -1455,8 +1533,8 @@
 
         function mostrarRegistroHoy() {
             const hoy = new Date().toISOString().split('T')[0];
-            const registroHoy = _mkKBxSwa.filter(r => r.fecha === hoy);
-            const dntHoy = _IVufGELX.find(d => d.fecha === hoy);
+            const registroHoy = registros.filter(r => r.fecha === hoy);
+            const dntHoy = diasNoTrabajados.find(d => d.fecha === hoy);
             const container = document.getElementById('registroHoy');
 
             if (dntHoy) {
@@ -1476,7 +1554,7 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📋</div>
-                        <p>No hay _mkKBxSwa hoy</p>
+                        <p>No hay registros hoy</p>
                     </div>
                 `;
                 return;
@@ -1487,7 +1565,7 @@
                 const entrada = new Date(reg.entrada);
                 const salida = new Date(reg.salida);
 
-                if (_EowPxnAH === 'hora') {
+                if (tipoUsuario === 'hora') {
                     const tipo = reg.domingo ? 'Domingo' : reg.feriado ? 'Feriado' : 'Normal';
                     html += `
                         <div class="resumen-card">
@@ -1574,7 +1652,7 @@
             const inicioSemana = new Date(hoy);
             inicioSemana.setDate(hoy.getDate() - hoy.getDay() + 1); // Lunes
 
-            const registrosSemana = _mkKBxSwa.filter(r => {
+            const registrosSemana = registros.filter(r => {
                 const fecha = new Date(r.fecha);
                 return fecha >= inicioSemana;
             });
@@ -1585,13 +1663,13 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📅</div>
-                        <p>No hay _mkKBxSwa esta semana</p>
+                        <p>No hay registros esta semana</p>
                     </div>
                 `;
                 return;
             }
 
-            if (_EowPxnAH === 'hora') {
+            if (tipoUsuario === 'hora') {
                 mostrarResumenSemanalHora(registrosSemana, container);
             } else {
                 mostrarResumenSemanalEmbalador(registrosSemana, container);
@@ -1690,7 +1768,7 @@
             const mesActual = hoy.getMonth();
             const añoActual = hoy.getFullYear();
 
-            const registrosMes = _mkKBxSwa.filter(r => {
+            const registrosMes = registros.filter(r => {
                 const fecha = new Date(r.fecha);
                 return fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual;
             });
@@ -1701,13 +1779,13 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📊</div>
-                        <p>No hay _mkKBxSwa este mes</p>
+                        <p>No hay registros este mes</p>
                     </div>
                 `;
                 return;
             }
 
-            if (_EowPxnAH === 'hora') {
+            if (tipoUsuario === 'hora') {
                 mostrarResumenMensualHora(registrosMes, container, mesActual, añoActual);
             } else {
                 mostrarResumenMensualEmbalador(registrosMes, container, mesActual, añoActual);
@@ -1808,8 +1886,14 @@
 
             let html = `
                 <div class="tipo-info">
+                    <div class="tipo-label">Datos personales</div>
+                    <div class="tipo-value" style="font-size:16px;margin-bottom:8px;">${nombreUsuario} ${apellidoUsuario}</div>
+                    ${puestoUsuario ? `<div style="font-size:13px;color:var(--text-secondary);">📋 ${puestoUsuario}</div>` : ''}
+                </div>
+
+                <div class="tipo-info">
                     <div class="tipo-label">Tipo de trabajo</div>
-                    <div class="tipo-value">${_EowPxnAH === 'embalador' ? 'Embalador' : 'Por Hora'}</div>
+                    <div class="tipo-value">${tipoUsuario === 'embalador' ? 'Embalador' : 'Por Hora'}</div>
                 </div>
 
                 <div style="margin-top: 30px;">
@@ -1827,7 +1911,7 @@
 
         function cambiarConfiguracion() {
             if (confirm('⚠️ Esto borrará tu configuración actual. ¿Continuar?')) {
-                localStorage.removeItem('_EowPxnAH');
+                localStorage.removeItem('tipoUsuario');
                 location.reload();
             }
         }
@@ -1836,7 +1920,7 @@
             document.getElementById('modalManual').classList.add('active');
             document.getElementById('manualFecha').valueAsDate = new Date();
 
-            if (_EowPxnAH === 'embalador') {
+            if (tipoUsuario === 'embalador') {
                 document.getElementById('manualHoraFields').style.display = 'none';
                 document.getElementById('manualCajasFields').style.display = 'block';
             } else {
@@ -1874,7 +1958,7 @@
                 salida: salidaDate.toISOString()
             };
 
-            if (_EowPxnAH === 'hora') {
+            if (tipoUsuario === 'hora') {
                 const descanso = parseInt(document.getElementById('manualDescanso').value) || 0;
                 const domingo = document.getElementById('manualDomingo').checked;
                 const feriado = document.getElementById('manualFeriado').checked;
@@ -1893,9 +1977,9 @@
                 registro.cajasPendientes = (sinPapel === 0 && conPapel === 0);
             }
 
-            _mkKBxSwa.push(registro);
-            _mkKBxSwa.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-            localStorage.setItem('_mkKBxSwa', JSON.stringify(_mkKBxSwa));
+            registros.push(registro);
+            registros.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            localStorage.setItem('registros', JSON.stringify(registros));
 
             cerrarModalManual();
             mostrarRegistroHoy();
@@ -1915,8 +1999,8 @@
             // Ignorar domingos como días pendientes
             if (ayer.getDay() === 0) return;
 
-            const tieneRegistroAyer = _mkKBxSwa.some(r => r.fecha === ayerStr);
-            const tieneDNTAyer = _IVufGELX.some(d => d.fecha === ayerStr);
+            const tieneRegistroAyer = registros.some(r => r.fecha === ayerStr);
+            const tieneDNTAyer = diasNoTrabajados.some(d => d.fecha === ayerStr);
 
             if (!tieneRegistroAyer && !tieneDNTAyer) {
                 const nombreDia = ayer.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -1935,7 +2019,7 @@
 
         // ==================== DÍA NO TRABAJADO ====================
         function abrirModalDiaNoTrabajado(fecha) {
-            _HXeKDYAH = null;
+            motivoSeleccionado = null;
             const input = document.getElementById('dntFecha');
             input.valueAsDate = fecha ? new Date(fecha + 'T12:00:00') : new Date();
             renderizarMotivos();
@@ -1949,14 +2033,14 @@
 
         function renderizarMotivos() {
             const lista = document.getElementById('motivosLista');
-            lista.innerHTML = _bYLzTMVc.map(m => `
-                <span class="motivo-chip ${_HXeKDYAH === m ? 'selected' : ''}"
+            lista.innerHTML = motivosPersonalizados.map(m => `
+                <span class="motivo-chip ${motivoSeleccionado === m ? 'selected' : ''}"
                     onclick="seleccionarMotivo('${m}')">${m}</span>
             `).join('');
         }
 
         function seleccionarMotivo(motivo) {
-            _HXeKDYAH = motivo;
+            motivoSeleccionado = motivo;
             renderizarMotivos();
             if (motivo === 'Otro') {
                 document.getElementById('otroMotivoGroup').style.display = 'block';
@@ -1968,18 +2052,18 @@
         function guardarDiaNoTrabajado() {
             const fecha = document.getElementById('dntFecha').value;
             if (!fecha) { alert('⚠️ Elegí una fecha'); return; }
-            if (!_HXeKDYAH) { alert('⚠️ Elegí un motivo'); return; }
+            if (!motivoSeleccionado) { alert('⚠️ Elegí un motivo'); return; }
 
-            let motivo = _HXeKDYAH;
+            let motivo = motivoSeleccionado;
             if (motivo === 'Otro') {
                 motivo = document.getElementById('otroMotivoTexto').value.trim();
                 if (!motivo) { alert('⚠️ Escribí el motivo'); return; }
             }
 
             // Eliminar registro existente si lo hubiera
-            _IVufGELX = _IVufGELX.filter(d => d.fecha !== fecha);
-            _IVufGELX.push({ fecha, motivo });
-            localStorage.setItem('_IVufGELX', JSON.stringify(_IVufGELX));
+            diasNoTrabajados = diasNoTrabajados.filter(d => d.fecha !== fecha);
+            diasNoTrabajados.push({ fecha, motivo });
+            localStorage.setItem('diasNoTrabajados', JSON.stringify(diasNoTrabajados));
 
             cerrarModalDiaNoTrabajado();
             document.getElementById('alertaPendiente').innerHTML = '';
@@ -2001,7 +2085,7 @@
 
         function renderizarMotivosGestion() {
             const lista = document.getElementById('motivosGestionLista');
-            lista.innerHTML = _bYLzTMVc.map((m, i) => `
+            lista.innerHTML = motivosPersonalizados.map((m, i) => `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(77,159,255,0.1);border-radius:8px;margin-bottom:8px;">
                     <span style="font-weight:600;">${m}</span>
                     <button class="motivo-chip eliminar" onclick="eliminarMotivo(${i})">✕ Quitar</button>
@@ -2012,25 +2096,25 @@
         function agregarNuevoMotivo() {
             const texto = document.getElementById('nuevoMotivoTexto').value.trim();
             if (!texto) { alert('⚠️ Escribí el nombre del motivo'); return; }
-            if (_bYLzTMVc.includes(texto)) { alert('⚠️ Ese motivo ya existe'); return; }
-            _bYLzTMVc.push(texto);
-            localStorage.setItem('_bYLzTMVc', JSON.stringify(_bYLzTMVc));
+            if (motivosPersonalizados.includes(texto)) { alert('⚠️ Ese motivo ya existe'); return; }
+            motivosPersonalizados.push(texto);
+            localStorage.setItem('motivosPersonalizados', JSON.stringify(motivosPersonalizados));
             document.getElementById('nuevoMotivoTexto').value = '';
             renderizarMotivosGestion();
             alert('✅ Motivo agregado');
         }
 
         function eliminarMotivo(index) {
-            if (confirm(`¿Eliminar "${_bYLzTMVc[index]}"?`)) {
-                _bYLzTMVc.splice(index, 1);
-                localStorage.setItem('_bYLzTMVc', JSON.stringify(_bYLzTMVc));
+            if (confirm(`¿Eliminar "${motivosPersonalizados[index]}"?`)) {
+                motivosPersonalizados.splice(index, 1);
+                localStorage.setItem('motivosPersonalizados', JSON.stringify(motivosPersonalizados));
                 renderizarMotivosGestion();
             }
         }
 
         // ==================== EDITAR REGISTRO ====================
         function abrirModalEditarRegistro(registroId) {
-            const reg = _mkKBxSwa.find(r => r.id === registroId);
+            const reg = registros.find(r => r.id === registroId);
             if (!reg) return;
 
             document.getElementById('editarRegistroId').value = registroId;
@@ -2041,7 +2125,7 @@
             document.getElementById('editarEntrada').value = entrada.toTimeString().slice(0,5);
             document.getElementById('editarSalida').value = salida.toTimeString().slice(0,5);
 
-            if (_EowPxnAH === 'hora') {
+            if (tipoUsuario === 'hora') {
                 document.getElementById('editarHoraFields').style.display = 'block';
                 document.getElementById('editarCajasFields').style.display = 'none';
                 document.getElementById('editarDescanso').value = reg.descansoMinutos || 0;
@@ -2063,7 +2147,7 @@
             document.getElementById('editarEntrada').value = '';
             document.getElementById('editarSalida').value = '';
 
-            if (_EowPxnAH === 'hora') {
+            if (tipoUsuario === 'hora') {
                 document.getElementById('editarHoraFields').style.display = 'block';
                 document.getElementById('editarCajasFields').style.display = 'none';
                 document.getElementById('editarDescanso').value = 0;
@@ -2109,7 +2193,7 @@
                 salida: salidaDate.toISOString(),
             };
 
-            if (_EowPxnAH === 'hora') {
+            if (tipoUsuario === 'hora') {
                 const descanso = parseInt(document.getElementById('editarDescanso').value) || 0;
                 nuevoReg.descansoMinutos = descanso;
                 nuevoReg.domingo = document.getElementById('editarDomingo').checked;
@@ -2123,14 +2207,14 @@
             }
 
             if (registroId) {
-                const idx = _mkKBxSwa.findIndex(r => r.id === parseInt(registroId));
-                if (idx !== -1) _mkKBxSwa[idx] = nuevoReg;
+                const idx = registros.findIndex(r => r.id === parseInt(registroId));
+                if (idx !== -1) registros[idx] = nuevoReg;
             } else {
-                _mkKBxSwa.push(nuevoReg);
+                registros.push(nuevoReg);
             }
 
-            _mkKBxSwa.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-            localStorage.setItem('_mkKBxSwa', JSON.stringify(_mkKBxSwa));
+            registros.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            localStorage.setItem('registros', JSON.stringify(registros));
 
             cerrarModalEditarRegistro();
             document.getElementById('alertaPendiente').innerHTML = '';
@@ -2142,8 +2226,8 @@
 
         function eliminarRegistro(registroId) {
             if (!confirm('⚠️ ¿Eliminar este registro?')) return;
-            _mkKBxSwa = _mkKBxSwa.filter(r => r.id !== registroId);
-            localStorage.setItem('_mkKBxSwa', JSON.stringify(_mkKBxSwa));
+            registros = registros.filter(r => r.id !== registroId);
+            localStorage.setItem('registros', JSON.stringify(registros));
             mostrarRegistroHoy();
             mostrarResumenSemanal();
             mostrarResumenMensual();
@@ -2151,8 +2235,8 @@
 
         function eliminarDiaNoTrabajado(fecha) {
             if (!confirm('⚠️ ¿Eliminar este registro?')) return;
-            _IVufGELX = _IVufGELX.filter(d => d.fecha !== fecha);
-            localStorage.setItem('_IVufGELX', JSON.stringify(_IVufGELX));
+            diasNoTrabajados = diasNoTrabajados.filter(d => d.fecha !== fecha);
+            localStorage.setItem('diasNoTrabajados', JSON.stringify(diasNoTrabajados));
             mostrarRegistroHoy();
             mostrarResumenSemanal();
             mostrarResumenMensual();
@@ -2162,24 +2246,24 @@
         function mostrarHistorial() {
             const container = document.getElementById('historialContent');
 
-            // Juntar todos los _mkKBxSwa y días no trabajados
+            // Juntar todos los registros y días no trabajados
             // Generar lista de todos los días desde el primero registrado hasta hoy
             const hoy = new Date();
             hoy.setHours(0,0,0,0);
 
             // Encontrar fecha más antigua
             let fechaInicio = new Date();
-            [..._mkKBxSwa, ..._IVufGELX].forEach(r => {
+            [...registros, ...diasNoTrabajados].forEach(r => {
                 const f = new Date(r.fecha + 'T00:00:00');
                 if (f < fechaInicio) fechaInicio = f;
             });
             fechaInicio.setHours(0,0,0,0);
 
-            if (_mkKBxSwa.length === 0 && _IVufGELX.length === 0) {
+            if (registros.length === 0 && diasNoTrabajados.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📅</div>
-                        <p>No hay _mkKBxSwa todavía</p>
+                        <p>No hay registros todavía</p>
                     </div>
                 `;
                 return;
@@ -2196,8 +2280,8 @@
                 if (!porMes[mesKey]) porMes[mesKey] = [];
 
                 // Ver qué tiene ese día
-                const regsDelDia = _mkKBxSwa.filter(r => r.fecha === fechaStr);
-                const dnt = _IVufGELX.find(d => d.fecha === fechaStr);
+                const regsDelDia = registros.filter(r => r.fecha === fechaStr);
+                const dnt = diasNoTrabajados.find(d => d.fecha === fechaStr);
                 const esDomingo = cursor.getDay() === 0;
 
                 // Solo incluir si tiene algo registrado O si no es domingo y es un día laboral pasado
@@ -2205,7 +2289,7 @@
                     porMes[mesKey].push({
                         fecha: fechaStr,
                         dia: new Date(cursor),
-                        _mkKBxSwa: regsDelDia,
+                        registros: regsDelDia,
                         dnt,
                         esDomingo
                     });
@@ -2227,10 +2311,10 @@
                 const nombreMes = `${mesesNombres[parseInt(mes)-1]} ${anio}`;
 
                 // Resumen del mes
-                const diasTrabajados = dias.filter(d => d._mkKBxSwa.length > 0).length;
+                const diasTrabajados = dias.filter(d => d.registros.length > 0).length;
                 const diasNoTrab = dias.filter(d => d.dnt).length;
-                const diasPendientes = dias.filter(d => d._mkKBxSwa.length === 0 && !d.dnt && !d.esDomingo && new Date(d.fecha) < hoy).length;
-                const totalHoras = dias.reduce((acc, d) => acc + d._mkKBxSwa.reduce((a, r) => a + r.horasTrabajadas, 0), 0);
+                const diasPendientes = dias.filter(d => d.registros.length === 0 && !d.dnt && !d.esDomingo && new Date(d.fecha) < hoy).length;
+                const totalHoras = dias.reduce((acc, d) => acc + d.registros.reduce((a, r) => a + r.horasTrabajadas, 0), 0);
 
                 html += `
                     <div class="mes-grupo">
@@ -2239,7 +2323,7 @@
                                 <div class="mes-titulo">📅 ${nombreMes}</div>
                                 <div class="mes-resumen">
                                     ✅ ${diasTrabajados} trabajados
-                                    ${_EowPxnAH === 'hora' ? `· ⏱ ${totalHoras.toFixed(1)}h` : ''}
+                                    ${tipoUsuario === 'hora' ? `· ⏱ ${totalHoras.toFixed(1)}h` : ''}
                                     ${diasNoTrab > 0 ? `· 🚫 ${diasNoTrab} ausencias` : ''}
                                     ${diasPendientes > 0 ? `· ⚠️ ${diasPendientes} pendientes` : ''}
                                 </div>
@@ -2255,16 +2339,16 @@
                                 let badge = '';
                                 let detalleHtml = '';
 
-                                if (d._mkKBxSwa.length > 0) {
-                                    const totalH = d._mkKBxSwa.reduce((a, r) => a + r.horasTrabajadas, 0);
-                                    badge = `<span class="dia-badge trabajado">✅ ${_EowPxnAH === 'hora' ? totalH.toFixed(2)+'h' : d._mkKBxSwa.reduce((a,r)=>(a+(r.cajasSinPapel||0)+(r.cajasConPapel||0)),0)+' cajas'}</span>`;
+                                if (d.registros.length > 0) {
+                                    const totalH = d.registros.reduce((a, r) => a + r.horasTrabajadas, 0);
+                                    badge = `<span class="dia-badge trabajado">✅ ${tipoUsuario === 'hora' ? totalH.toFixed(2)+'h' : d.registros.reduce((a,r)=>(a+(r.cajasSinPapel||0)+(r.cajasConPapel||0)),0)+' cajas'}</span>`;
 
-                                    detalleHtml = d._mkKBxSwa.map((reg, idx) => {
+                                    detalleHtml = d.registros.map((reg, idx) => {
                                         const ent = new Date(reg.entrada);
                                         const sal = new Date(reg.salida);
                                         const tipo = reg.domingo ? 'Domingo' : reg.feriado ? 'Feriado' : 'Normal';
 
-                                        if (_EowPxnAH === 'hora') {
+                                        if (tipoUsuario === 'hora') {
                                             return `
                                                 <div class="dia-detalle-stats">
                                                     <div class="dia-stat">
@@ -2355,7 +2439,7 @@
                 `;
             });
 
-            container.innerHTML = html || `<div class="empty-state"><div class="empty-icon">📅</div><p>No hay _mkKBxSwa todavía</p></div>`;
+            container.innerHTML = html || `<div class="empty-state"><div class="empty-icon">📅</div><p>No hay registros todavía</p></div>`;
 
             // Abrir el mes actual por defecto
             const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
@@ -2378,17 +2462,17 @@
         }
 
         function exportarExcel() {
-            if (_mkKBxSwa.length === 0) {
-                alert('⚠️ No hay _mkKBxSwa para exportar');
+            if (registros.length === 0) {
+                alert('⚠️ No hay registros para exportar');
                 return;
             }
 
             let filas = [];
             let encabezado = [];
 
-            if (_EowPxnAH === 'hora') {
+            if (tipoUsuario === 'hora') {
                 encabezado = ['Fecha','Entrada','Salida','Descanso (min)','Tipo','Horas'];
-                filas = _mkKBxSwa.map(reg => {
+                filas = registros.map(reg => {
                     const entrada = new Date(reg.entrada);
                     const salida = new Date(reg.salida);
                     const tipo = reg.domingo ? 'Domingo' : reg.feriado ? 'Feriado' : 'Normal';
@@ -2403,7 +2487,7 @@
                 });
             } else {
                 encabezado = ['Fecha','Entrada','Salida','Horas','Cajas Sin Papel','Cajas Con Papel','Total Cajas'];
-                filas = _mkKBxSwa.map(reg => {
+                filas = registros.map(reg => {
                     const entrada = new Date(reg.entrada);
                     const salida = new Date(reg.salida);
                     return [
@@ -2419,7 +2503,16 @@
             }
 
             // Generar CSV con separador punto y coma (compatible con Excel en español)
-            const csvContent = [encabezado, ...filas]
+            const nombreCompleto = nombreUsuario && apellidoUsuario ? `${nombreUsuario} ${apellidoUsuario}` : '';
+            let csvContent = '';
+            
+            if (nombreCompleto) {
+                csvContent = `Empleado: ${nombreCompleto}\n`;
+                if (puestoUsuario) csvContent += `Puesto: ${puestoUsuario}\n`;
+                csvContent += '\n';
+            }
+            
+            csvContent += [encabezado, ...filas]
                 .map(fila => fila.map(celda => `"${celda}"`).join(';'))
                 .join('\n');
 
@@ -2436,10 +2529,13 @@
 
         function exportarRespaldo() {
             const respaldo = {
-                _mkKBxSwa,
-                _IVufGELX,
-                _bYLzTMVc,
-                _EowPxnAH,
+                registros,
+                diasNoTrabajados,
+                motivosPersonalizados,
+                tipoUsuario,
+                nombreUsuario,
+                apellidoUsuario,
+                puestoUsuario,
                 fecha: new Date().toISOString()
             };
             const blob = new Blob([JSON.stringify(respaldo, null, 2)], {type: 'application/json'});
@@ -2462,14 +2558,20 @@
                 try {
                     const respaldo = JSON.parse(e.target.result);
                     if (confirm('⚠️ Esto reemplazará todos tus datos actuales. ¿Continuar?')) {
-                        _mkKBxSwa = respaldo._mkKBxSwa || [];
-                        _IVufGELX = respaldo._IVufGELX || [];
-                        _bYLzTMVc = respaldo._bYLzTMVc || [..._mqPrBnCE];
-                        _EowPxnAH = respaldo._EowPxnAH || null;
-                        localStorage.setItem('_mkKBxSwa', JSON.stringify(_mkKBxSwa));
-                        localStorage.setItem('_IVufGELX', JSON.stringify(_IVufGELX));
-                        localStorage.setItem('_bYLzTMVc', JSON.stringify(_bYLzTMVc));
-                        localStorage.setItem('_EowPxnAH', _EowPxnAH);
+                        registros = respaldo.registros || [];
+                        diasNoTrabajados = respaldo.diasNoTrabajados || [];
+                        motivosPersonalizados = respaldo.motivosPersonalizados || [...MOTIVOS_DEFAULT];
+                        tipoUsuario = respaldo.tipoUsuario || null;
+                        nombreUsuario = respaldo.nombreUsuario || '';
+                        apellidoUsuario = respaldo.apellidoUsuario || '';
+                        puestoUsuario = respaldo.puestoUsuario || '';
+                        localStorage.setItem('registros', JSON.stringify(registros));
+                        localStorage.setItem('diasNoTrabajados', JSON.stringify(diasNoTrabajados));
+                        localStorage.setItem('motivosPersonalizados', JSON.stringify(motivosPersonalizados));
+                        localStorage.setItem('tipoUsuario', tipoUsuario);
+                        localStorage.setItem('nombreUsuario', nombreUsuario);
+                        localStorage.setItem('apellidoUsuario', apellidoUsuario);
+                        localStorage.setItem('puestoUsuario', puestoUsuario);
                         location.reload();
                     }
                 } catch (error) {
@@ -2477,14 +2579,6 @@
                 }
             };
             reader.readAsText(file);
-        }
-        // Registrar Service Worker para PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(() => console.log('SW registrado'))
-                    .catch(err => console.log('SW error:', err));
-            });
         }
     </script>
 </body>
