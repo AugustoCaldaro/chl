@@ -949,7 +949,7 @@
             <button class="tab active" onclick="cambiarTab('hoy', this)">Hoy</button>
             <button class="tab" onclick="cambiarTab('semanal', this)">Semanal</button>
             <button class="tab" onclick="cambiarTab('mensual', this)">Mensual</button>
-            <button class="tab" onclick="cambiarTab('historial', this)">📅 Historial</button>
+            <button class="tab" onclick="cambiarTab('historial', this)">📋 Historial</button>
             <button class="tab" onclick="cambiarTab('configuracion', this)">⚙️ Config</button>
         </div>
 
@@ -1662,7 +1662,7 @@
             if (registrosSemana.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-icon">📅</div>
+                        <div class="empty-icon">📊</div>
                         <p>No hay registros esta semana</p>
                     </div>
                 `;
@@ -2262,7 +2262,7 @@
             if (registros.length === 0 && diasNoTrabajados.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-icon">📅</div>
+                        <div class="empty-icon">📊</div>
                         <p>No hay registros todavía</p>
                     </div>
                 `;
@@ -2320,7 +2320,7 @@
                     <div class="mes-grupo">
                         <div class="mes-header" onclick="toggleMes('${mesKey}')">
                             <div>
-                                <div class="mes-titulo">📅 ${nombreMes}</div>
+                                <div class="mes-titulo">📆 ${nombreMes}</div>
                                 <div class="mes-resumen">
                                     ✅ ${diasTrabajados} trabajados
                                     ${tipoUsuario === 'hora' ? `· ⏱ ${totalHoras.toFixed(1)}h` : ''}
@@ -2439,7 +2439,7 @@
                 `;
             });
 
-            container.innerHTML = html || `<div class="empty-state"><div class="empty-icon">📅</div><p>No hay registros todavía</p></div>`;
+            container.innerHTML = html || `<div class="empty-state"><div class="empty-icon">📋</div><p>No hay registros todavía</p></div>`;
 
             // Abrir el mes actual por defecto
             const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
