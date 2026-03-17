@@ -1368,7 +1368,7 @@
             entradaActual = ahora.toISOString();
             localStorage.setItem('entradaActual', entradaActual);
             actualizarEstado();
-            alert('✅ Entrada registrada: ' + ahora.toLocaleTimeString());
+            alert('✅ Entrada registrada: ' + ahora.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}));
         }
 
         function abrirModalSalida() {
@@ -1525,7 +1525,7 @@
             const statusTime = document.getElementById('statusTime');
             if (entradaActual) {
                 const entrada = new Date(entradaActual);
-                statusTime.textContent = `Entrada: ${entrada.toLocaleTimeString()}`;
+                statusTime.textContent = `Entrada: ${entrada.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}`;
             } else {
                 statusTime.textContent = 'Sin registro activo';
             }
@@ -1576,11 +1576,11 @@
                             <div class="resumen-stats">
                                 <div class="stat">
                                     <div class="stat-label">Entrada</div>
-                                    <div class="stat-value">${entrada.toLocaleTimeString()}</div>
+                                    <div class="stat-value">${entrada.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}</div>
                                 </div>
                                 <div class="stat">
                                     <div class="stat-label">Salida</div>
-                                    <div class="stat-value">${salida.toLocaleTimeString()}</div>
+                                    <div class="stat-value">${salida.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}</div>
                                 </div>
                                 <div class="stat">
                                     <div class="stat-label">Descanso</div>
@@ -1603,16 +1603,16 @@
                         <div class="resumen-card">
                             <div class="resumen-header">
                                 <div class="resumen-title">Registro #${idx + 1}</div>
-                                <div class="resumen-date">${entrada.toLocaleDateString()}</div>
+                                <div class="resumen-date">${entrada.toLocaleDateString('es-AR')}</div>
                             </div>
                             <div class="resumen-stats">
                                 <div class="stat">
                                     <div class="stat-label">Entrada</div>
-                                    <div class="stat-value">${entrada.toLocaleTimeString()}</div>
+                                    <div class="stat-value">${entrada.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}</div>
                                 </div>
                                 <div class="stat">
                                     <div class="stat-label">Salida</div>
-                                    <div class="stat-value">${salida.toLocaleTimeString()}</div>
+                                    <div class="stat-value">${salida.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}</div>
                                 </div>
                                 <div class="stat">
                                     <div class="stat-label">Horas</div>
@@ -2478,8 +2478,8 @@
                     const tipo = reg.domingo ? 'Domingo' : reg.feriado ? 'Feriado' : 'Normal';
                     return [
                         reg.fecha,
-                        entrada.toLocaleTimeString(),
-                        salida.toLocaleTimeString(),
+                        entrada.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}),
+                        salida.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}),
                         reg.descansoMinutos || 0,
                         tipo,
                         reg.horasTrabajadas.toFixed(2)
@@ -2492,8 +2492,8 @@
                     const salida = new Date(reg.salida);
                     return [
                         reg.fecha,
-                        entrada.toLocaleTimeString(),
-                        salida.toLocaleTimeString(),
+                        entrada.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}),
+                        salida.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}),
                         reg.horasTrabajadas.toFixed(2),
                         reg.cajasSinPapel || 0,
                         reg.cajasConPapel || 0,
