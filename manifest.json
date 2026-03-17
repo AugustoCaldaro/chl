@@ -2,7 +2,7 @@
   "name": "Control de Horas Laborales",
   "short_name": "CHL",
   "description": "Registrá tu entrada, salida y controlá tus horas laborales",
-  "author": "Augusto Caldara",
+  "author": "Augusto Caldaro",
   "version": "1.0.0",
   "start_url": "./index.html",
   "display": "standalone",
