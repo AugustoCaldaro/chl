@@ -1,6 +1,6 @@
 /*
  * Control de Horas Laborales - Service Worker
- * © 2025 Augusto Caldara. Todos los derechos reservados.
+ * © 2025 Augusto Caldaro. Todos los derechos reservados.
  * Uso no autorizado prohibido.
  */
 
